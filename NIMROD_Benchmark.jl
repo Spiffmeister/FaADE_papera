@@ -1,7 +1,6 @@
 using LinearAlgebra
 
 cd("..")
-using Interpolations
 push!(LOAD_PATH,"./SBP_operators")
 using SBP_operators
 
@@ -18,7 +17,7 @@ F(x,y,t) = 2π^2*cos(π*x)*cos(π*y)
 # Domain
 𝒟x = [-0.5,0.5]
 𝒟y = [-0.5,0.5]
-nx = ny = 16
+nx = ny = 32
 
 Dom = Grid2D(𝒟x,𝒟y,nx,ny)
 
@@ -35,14 +34,14 @@ BoundaryDown    = Boundary(Dirichlet,(x,t) -> 0.0, Down, 2)
 u₀(x,y) = cos(π*x)*cos(π*y)
 
 # Perpendicular diffusion coefficient
-k(x,y) = 1.0
+k(x,y) = 1.0e-2
 
 # Build PDE problem
 P = VariableCoefficientPDE2D(u₀,k,k,order,BoundaryLeft,BoundaryRight,BoundaryUp,BoundaryDown)
 
 # Time domain
-Δt = 0.1Dom.Δx^2
-t_f = 1.0
+Δt = 0.01Dom.Δx^2
+t_f = 10.0
 
 
 
@@ -51,13 +50,18 @@ t_f = 1.0
     CONSTRUCT GRID
 ===#
 function B(X,x,p,t)
-    X[1] = π*cos(π*x[1])*sin(π*x[2])
-    X[2] = -π*sin(π*x[1])*cos(π*x[2])
+    X[1] = -π*cos(π*x[1])*sin(π*x[2])
+    X[2] = π*sin(π*x[1])*cos(π*x[2])
     # X[3] = 0.0
 end
 
+# B(x) = Point2f([-π*cos(π*x[1])*sin(π*x[2])
+# π*sin(π*x[1])*cos(π*x[2])
+# ])
 
-    
+# P = ODEProblem(B,[0.2,0.0],(0.0,2π))
+# solve(P,Rodas4P())
+
 gdata   = construct_grid(B,Dom,[-2π,2π],ymode=:stop)
 Pfn     = generate_parallel_penalty(gdata,Dom,order)
 
@@ -74,7 +78,8 @@ end
 
 
 # Solve
-@time soln = solve(P,Dom,Δt,t_f,:cgie,adaptive=false,penalty_func=Pfn,source=F)
+@time soln = solve(P,Dom,Δt,2.1Δt,:cgie,adaptive=true,penalty_func=Pfn,source=F)
+@time soln = solve(P,Dom,Δt,t_f,:cgie,adaptive=true,penalty_func=Pfn,source=F)
 
 
 # Exact solution
