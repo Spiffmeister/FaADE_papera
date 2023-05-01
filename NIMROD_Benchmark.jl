@@ -11,8 +11,7 @@ using SBP_operators
 Ψ(x,y) = cos(π*x)*cos(π*y)
 
 
-# Source term
-F(x,y,t) = 2π^2*cos(π*x)*cos(π*y)
+
 
 # Domain
 𝒟x = [-0.5,0.5]
@@ -34,7 +33,7 @@ BoundaryDown    = Boundary(Dirichlet,(x,t) -> cos(π*x)*cos(-0.5π)   , Down, 2)
 u₀(x,y) = cos(π*x)*cos(π*y)
 
 # Perpendicular diffusion coefficient
-k(x,y) = 1.0
+k(x,y) = 1.0e-1
 
 # Build PDE problem
 P = VariableCoefficientPDE2D(u₀,k,k,order,BoundaryLeft,BoundaryRight,BoundaryUp,BoundaryDown)
@@ -44,6 +43,9 @@ P = VariableCoefficientPDE2D(u₀,k,k,order,BoundaryLeft,BoundaryRight,BoundaryU
 t_f = 10.0
 
 
+
+# Source term
+F(x,y,t) = 2π^2*cos(π*x)*cos(π*y)
 
 
 #===
@@ -60,8 +62,8 @@ Pfn     = generate_parallel_penalty(gdata,Dom,order)
 
 
 # Solve
-@time soln = solve(P,Dom,Δt,2.1Δt,:cgie,adaptive=false,Pgrid=gdata,source=F)
-@time soln = solve(P,Dom,Δt,t_f,:cgie,adaptive=false,Pgrid=gdata,source=F)
+@time soln = solve(P,Dom,Δt,2.1Δt,:cgie,adaptive=false,Pgrid=gdata)#,source=F)
+@time soln = solve(P,Dom,Δt,10.1Δt,:cgie,adaptive=false,Pgrid=gdata)#,source=F)
 
 
 # Exact solution
