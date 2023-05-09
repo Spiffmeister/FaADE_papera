@@ -35,23 +35,20 @@ end
 
 
 N = [17,25,33,41]
-# k_perp = 1e-3
 
 for k_perp = [1e-3,1e-6,1e-9]
-    println("===",k_perp,"===")
     κ = k_perp
     k(x,y) = κ
-    ttol = 1e-5
+    ttol = 1e-6
     T(x,y,t) = (1.0 - exp(-2.0*k(x,y)*π^2*t) )/( k_perp )*Ψ(x,y)
     # Diffusion coefficient
     for order in [2,4]
-    # order = 2
         pollution = []
         pollution_time = []
         rel_error = []
+        
+        println("===",k_perp,"===")
         for n in N
-        # n = 33
-            
             nx = ny = n
             Dom = Grid2D(𝒟x,𝒟y,nx,ny)
             
@@ -59,16 +56,16 @@ for k_perp = [1e-3,1e-6,1e-9]
             P = VariableCoefficientPDE2D(u₀,k,k,order,BoundaryLeft,BoundaryRight,BoundaryUp,BoundaryDown)
 
             # Time domain
-            # Δt = min(0.01Dom.Δx^2/k(0.0,0.0),0.011)
-            Δt = 0.01Dom.Δx^2/k(0.0,0.0)
-            t_f = 1/(k(0.0,0.0) * 2 * π^2) * log(1/ttol)
+            Δt = 0.1Dom.Δx^2
+            t_f = 1/(2 * π^2) * log(1/ttol)
 
             gdata   = construct_grid(B,Dom,[-2.0,2.0],ymode=:stop)
+            Pfn = generate_parallel_penalty(gdata,Dom,order,perp=k_perp) # Generate a parallel penalty with a modified penalty parameter
 
-            println(nx," ",t_f)
+            println(nx," ",t_f," ",Δt)
 
-            soln = solve(P,Dom,Δt,2.1Δt,:cgie,adaptive=false,Pgrid=gdata)#,source=F)
-            soln = solve(P,Dom,Δt,t_f,:cgie,adaptive=false,Pgrid=gdata,source=F)
+            soln = solve(P,Dom,Δt,2.1Δt,:cgie,adaptive=false,source=F,penalty_func=Pfn)
+            soln = solve(P,Dom,Δt,t_f,:cgie,adaptive=false,source=F,penalty_func=Pfn)
 
             T_exact = zeros(Dom.nx,Dom.ny)
             for j = 1:ny
@@ -79,14 +76,13 @@ for k_perp = [1e-3,1e-6,1e-9]
             
 
             push!(pollution, abs(1/k(0.0,0.0) - soln.u[2][floor(Int,nx/2)+1,floor(Int,ny/2)+1]))
-            push!(pollution_time, abs(T(0.0,0.0,t_f) - soln.u[2][floor(Int,nx/2)+1,floor(Int,ny/2)+1]))
-
+            push!(pollution_time, abs(T(0.0,0.0,t_f) - soln.u[2][floor(Int,nx/2)+1,floor(Int,ny/2)+1])/T(0.0,0.0,t_f))
             push!(rel_error, norm(T_exact .- soln.u[2])/norm(T_exact))
 
         end
         nameappend=string("k=",k(0,0))
 
-        open(string("perp/NB_kperp_",nameappend,"_pollution_O",order,".csv"),"w") do io
+        open(string("perp/NB_kperp_",k_perp,"_pollution_O",order,".csv"),"w") do io
             writedlm(io,[N pollution pollution_time])
         end
 

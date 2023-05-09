@@ -10,11 +10,6 @@ using SBP_operators
 
 Ψ(x,y) = cos(π*x)*cos(π*y)
 
-# Diffusion coefficient
-κ_para = 1.0e3
-k(x,y) = 1.0 #perpendicular diffusion
-ttol = 1e-6
-
 
 # Domain
 𝒟x = [-0.5,0.5]
@@ -37,7 +32,7 @@ function B(X,x,p,t)
     # X[3] = 0.0
 end
 # Exact solution
-T(x,y,t) = (1.0 - exp(-2.0*k(x,y)*π^2*t) )/( k(x,y) )*Ψ(x,y)
+T(x,y,t) = (1.0 - exp(-2.0*π^2*t) )*Ψ(x,y) # k_perp = 1
 
 
 N = [17,25,33,41]
@@ -51,6 +46,7 @@ for k_para in [1.0,1.0e3,1.0e6,1.0e9]
     for order in [2,4]
         pollution = []
         rel_error = []
+        println("===PARA=",κ_para,"===ORDER=",order,"===")
         for n in N
 
             
@@ -62,22 +58,21 @@ for k_para in [1.0,1.0e3,1.0e6,1.0e9]
 
             # Time domain
             Δt = 0.1Dom.Δx^2
-            # t_f = 1/(k(0.0,0.0) * 2 * π^2) * log(1/ttol)
-            t_f = 1.0
+            t_f = 1/(k(0.0,0.0) * 2 * π^2) * log(1/ttol)
+            # t_f = 1.0
 
             gdata   = construct_grid(B,Dom,[-2.0,2.0],ymode=:stop)
             Pfn = generate_parallel_penalty(gdata,Dom,order,κ=κ_para) # Generate a parallel penalty with a modified penalty parameter
 
+            println(nx," ",t_f," ",Δt)
 
-            println(nx," ",t_f)
-
-            soln = solve(P,Dom,Δt,2.1Δt,:cgie,adaptive=false,Pgrid=gdata,source=F)
-            soln = solve(P,Dom,Δt,t_f,:cgie,adaptive=false,Pgrid=gdata,source=F)
+            soln = solve(P,Dom,Δt,2.1Δt,:cgie,adaptive=false,source=F,penalty_func=Pfn)
+            soln = solve(P,Dom,Δt,t_f,:cgie,adaptive=false,source=F,penalty_func=Pfn)
 
             T_exact = zeros(Dom.nx,Dom.ny);
             for j = 1:ny
                 for i = 1:nx
-                    T_exact[i,j] = T(Dom.gridx[i],Dom.gridy[j],1.0)
+                    T_exact[i,j] = T(Dom.gridx[i],Dom.gridy[j],t_f)
                 end
             end
             
@@ -86,13 +81,15 @@ for k_para in [1.0,1.0e3,1.0e6,1.0e9]
 
             push!(rel_error, norm(T_exact .- soln.u[2])/norm(T_exact))
 
+            println("poll=",pollution[end]," relerr=",rel_error[end])
+
         end
 
-        open(string("NB_kpara_",κ_para,"_pollution_O",order,".csv"),"w") do io
+        open(string("para/NB_kpara_",κ_para,"_pollution_O",order,".csv"),"w") do io
             writedlm(io,[N pollution])
         end
 
-        open(string("NB_kpara_",κ_para,"_relerr_O",order,".csv"),"w") do io
+        open(string("para/NB_kpara_",κ_para,"_relerr_O",order,".csv"),"w") do io
             writedlm(io,[N rel_error])
         end
     end

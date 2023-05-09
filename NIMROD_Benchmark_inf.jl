@@ -63,7 +63,7 @@ for order in [2,4]
 
         gdata   = construct_grid(B,Dom,[-2.0π,2.0π],ymode=:stop)
 
-        println(nx," ",t_f)
+        println(nx," ",t_f," ",Δt)
 
         soln = solve(P,Dom,Δt,2.1Δt,:cgie,adaptive=false,Pgrid=gdata,source=F)
         soln = solve(P,Dom,Δt,t_f,:cgie,adaptive=false,Pgrid=gdata,source=F)
@@ -84,11 +84,11 @@ for order in [2,4]
     end
     nameappend=string("k=",k(0,0))
 
-    open(string("limit/NIMROD_benchmark_limit_pollution_order=",order,".csv"),"w") do io
+    open(string("limit/NB_limit_pollution_O",order,".csv"),"w") do io
         writedlm(io,[N pollution])
     end
 
-    open(string("limit/NIMROD_Benchmark_limit_relerr_order=",order,".csv"),"w") do io
+    open(string("limit/NB_limit_relerr_O",order,".csv"),"w") do io
         writedlm(io,[N rel_error])
     end
 end
