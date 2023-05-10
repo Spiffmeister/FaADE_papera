@@ -29,21 +29,21 @@ F(x,y,t) = 2π^2*cos(π*x)*cos(π*y)
 function B(X,x,p,t)
     X[1] = -π*cos(π*x[1])*sin(π*x[2])
     X[2] = π*sin(π*x[1])*cos(π*x[2])
-    # X[3] = 0.0
 end
-# Exact solution
 
 
 N = [17,25,33,41]
-# k_perp = 1e-3
 
-k_perp = 1e-6
+k_perp = 0.0
+k_para = 1.0
 
-println("===",k_perp,"===")
-κ = k_perp
-k(x,y) = κ
+println("===",k_perp,"===",k_para,"===")
+k(x,y) = k_perp
 ttol = 1e-6
-T(x,y,t) = (1.0 - exp(-2.0*k(x,y)*π^2*t) )/( k_perp )*Ψ(x,y)
+
+# T(x,y,t) = (1.0 - exp(-2.0*k_perp*π^2*t) )/( k_perp )*Ψ(x,y)
+T(x,y,t) = 2π^2*t * Ψ(x,y)
+
 # Diffusion coefficient
 order = 2
 n = 33
@@ -55,17 +55,28 @@ Dom = Grid2D(𝒟x,𝒟y,nx,ny)
 P = VariableCoefficientPDE2D(u₀,k,k,order,BoundaryLeft,BoundaryRight,BoundaryUp,BoundaryDown)
 
 # Time domain
-Δt = 0.01Dom.Δx^2/k(0.0,0.0)
-t_f = 1/(k(0.0,0.0) * 2 * π^2) * log(1/ttol)
+Δt = 0.1Dom.Δx^2
+t_f = 1/( 2 * π^2) * 5.0
 
-gdata   = construct_grid(B,Dom,[-2.0,2.0],ymode=:stop)
+gdata   = construct_grid(B,Dom,[-2.0π,2.0π],ymode=:stop)
 
-println(nx," ",t_f)
+# for i = 1:n #remap all points back to themselves
+#     gdata.Fplane.x[:,i] = Dom.gridx
+#     gdata.Fplane.y[i,:] = Dom.gridy
+#     gdata.Bplane.x[:,i] = Dom.gridx
+#     gdata.Bplane.y[i,:] = Dom.gridy
+# end
 
-soln = solve(P,Dom,Δt,2.1Δt,:cgie,adaptive=false,Pgrid=gdata)#,source=F)
-soln = solve(P,Dom,Δt,t_f,:cgie,adaptive=false,Pgrid=gdata,source=F)
 
-T_exact = zeros(Dom.nx,Dom.ny)
+Pfn = generate_parallel_penalty(gdata,Dom,order,κ=k_para)#,perp=k_perp)
+
+println(nx," ",t_f," ",Δt)
+
+soln = solve(P,Dom,Δt,2.1Δt,:cgie,adaptive=false,   source=F,penalty_func=Pfn)
+soln = solve(P,Dom,Δt,t_f,:cgie,adaptive=false,     source=F,penalty_func=Pfn)
+# soln = solve(P,Dom,Δt,t_f,:cgie,adaptive=false,Pgrid=gdata,source=F)
+
+T_exact = zeros(Dom.nx,Dom.ny);
 for j = 1:ny
     for i = 1:nx
         T_exact[i,j] = T(Dom.gridx[i],Dom.gridy[j],t_f)
@@ -74,16 +85,26 @@ end
 
 
 
-println("pollution=",abs(1/k(0.0,0.0) - soln.u[2][floor(Int,nx/2)+1,floor(Int,ny/2)+1]))
-abs(T(0.0,0.0,t_f) - soln.u[2][floor(Int,nx/2)+1,floor(Int,ny/2)+1])
+println("pollution=",abs(1/k(0.0,0.0) - soln.u[2][floor(Int,nx/2)+1,floor(Int,ny/2)+1])*k(0.0,0.0))
+println("yes",(abs(T(0.0,0.0,t_f) - soln.u[2][floor(Int,nx/2)+1,floor(Int,ny/2)+1]))/T(0.0,0.0,t_f))
 
 println("rel err=",norm(T_exact .- soln.u[2])/norm(T_exact))
 
 
 
+XY = (16,17)
+sqrt(gdata.Fplane.x[XY[1],XY[2]]^2 + gdata.Fplane.x[XY[1],XY[2]]^2)
 
 
-# using Plots
+
+using Plots
 # surface(T_exact)
 # surface(soln.u[2])
 
+plot(soln.u[2][floor(Int,nx/2)+1,:]); plot!(T_exact[floor(Int,nx/2)+1,:]); scatter!(soln.u[2][floor(Int,nx/2)+1,:])
+
+
+
+
+# gdata.Fplane.ox[17,5],gdata.Fplane.oy[17,5]
+# gdata.Fplane.x[17,5] ,gdata.Fplane.y[17,5]
