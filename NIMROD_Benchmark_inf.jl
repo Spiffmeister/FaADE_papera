@@ -38,9 +38,8 @@ function B(X,x,p,t)
 end
 # Exact solution
 T(x,y,t) = 2π^2 * t * Ψ(x,y)
-# T(x,y,t) = (1.0 - exp(-2.0*k(0.0,0.0)*π^2*t) )/( k(0.0,0.0) )*Ψ(x,y)
 
-N = [17,25,33,41,49]
+N = [17,25,33,41,49,57]
 
 ttol = 1e-6
 
@@ -61,14 +60,14 @@ for order in [2,4]
         t_f = 1/(2π^2)
         nf = round(t_f/Δt)
         Δt = t_f/nf
-        # t_f = 100Δt
-        # t_f = 2.0
 
+        # Parallel penalty
         gdata   = construct_grid(B,Dom,[-2.0π,2.0π],ymode=:stop)
-        Pfn = generate_parallel_penalty(gdata,Dom,order,κ=1.0)#,perp=k(0.0,0.0))
+        Pfn = generate_parallel_penalty(gdata,Dom,order,κ=1.0)
         
-        soln = solve(P,Dom,Δt,2.1Δt,:cgie,adaptive=false,   nf=nf,source=F,penalty_func=Pfn)#,Pgrid=gdata)
-        soln = solve(P,Dom,Δt,t_f,:cgie,adaptive=false,     nf=nf,source=F,penalty_func=Pfn)#,Pgrid=gdata)
+        # Solve
+        soln = solve(P,Dom,Δt,2.1Δt,:cgie,adaptive=false,   nf=nf,source=F,penalty_func=Pfn)
+        soln = solve(P,Dom,Δt,t_f,:cgie,adaptive=false,     nf=nf,source=F,penalty_func=Pfn)
         println(nx,"    t_f=",t_f,"    t_f-t=",t_f-soln.t[2],"     Δt=",Δt,"   nf=",nf)
 
         # Compute the final solution at the final time of the run
@@ -82,33 +81,32 @@ for order in [2,4]
         # push!(pollution, 1/k(0.0,0.0) - soln.u[2][floor(Int,nx/2)+1,floor(Int,ny/2)+1])
         push!(pollution, 1.0 - soln.u[2][floor(Int,nx/2)+1,floor(Int,ny/2)+1])
         push!(pollnear,T_exact[floor(Int,nx/2),floor(Int,ny/2)] - soln.u[2][floor(Int,nx/2),floor(Int,ny/2)])
-
         push!(rel_error, norm(T_exact .- soln.u[2])/norm(T_exact))
 
-        P = Figure(resolution=(1200,1200))
-        Pa = Axis3(P[1,1])
-        wireframe!(Pa,Dom.gridx,Dom.gridy,abs.(soln.u[2].-T_exact))
-        name=string("kinf_O",order,"_n",n,".png")
-        save(name,P)
+        # P = Figure(resolution=(1200,1200))
+        # Pa = Axis3(P[1,1])
+        # wireframe!(Pa,Dom.gridx,Dom.gridy,abs.(soln.u[2].-T_exact))
+        # name=string("kinf_O",order,"_n",n,".png")
+        # save(name,P)
 
-        P2 = Figure(resolution=(1200,1200))
-        Pa2 = Axis(P2[1,1])
-        Pa21 = lines!(Pa2,soln.u[2][floor(Int,nx/2)+1,:])
-        Pa22 = lines!(Pa2,T_exact[floor(Int,nx/2)+1,:])
-        axislegend(Pa2,[Pa21,Pa22],["numerical","exact"])
-        name=string("aaa_lines/kinf_O",order,"_n",n,".png")
-        save(name,P2)
+        # P2 = Figure(resolution=(1200,1200))
+        # Pa2 = Axis(P2[1,1])
+        # # Pa21 = lines!(Pa2,soln.u[2][floor(Int,nx/2)+1,:])
+        # Pa22 = lines!(Pa2,abs.(T_exact[floor(Int,nx/2)+1,:].-soln.u[2][floor(Int,nx/2)+1,:]))
+        # # axislegend(Pa2,[Pa21,Pa22],["numerical","exact"])
+        # name=string("aaa_lines/kinf_O",order,"_n",n,".png")
+        # save(name,P2)
 
     end
     # nameappend=string("k=",k(0,0))
 
-    # open(string("limit/NB_limit_pollution_O",order,".csv"),"w") do io
-    #     writedlm(io,[N pollution])
-    # end
+    open(string("limit/NB_limit_pollution_O",order,".csv"),"w") do io
+        writedlm(io,[N pollution pollnear])
+    end
 
-    # open(string("limit/NB_limit_relerr_O",order,".csv"),"w") do io
-    #     writedlm(io,[N rel_error])
-    # end
+    open(string("limit/NB_limit_relerr_O",order,".csv"),"w") do io
+        writedlm(io,[N rel_error])
+    end
 
     println("pollution=",pollution)
     println("poll near",pollnear)

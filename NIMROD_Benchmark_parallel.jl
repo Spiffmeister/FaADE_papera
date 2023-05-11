@@ -35,8 +35,7 @@ end
 T(x,y,t) = (1.0 - exp(-2.0*π^2*t) )*Ψ(x,y) # k_perp = 1
 
 
-N = [17,25,33,41]
-# n = 17
+N = [17,25,33,41,49,57]
 
 
 for k_para in [1.0,1.0e3,1.0e6,1.0e9]
@@ -45,11 +44,11 @@ for k_para in [1.0,1.0e3,1.0e6,1.0e9]
     ttol = 1e-6
     for order in [2,4]
         pollution = []
+        pollution_time = []
         rel_error = []
         println("===PARA=",κ_para,"===ORDER=",order,"===")
         for n in N
 
-            
             nx = ny = n
             Dom = Grid2D(𝒟x,𝒟y,nx,ny)
             
@@ -58,35 +57,35 @@ for k_para in [1.0,1.0e3,1.0e6,1.0e9]
 
             # Time domain
             Δt = 0.1Dom.Δx^2
-            t_f = 1/(k(0.0,0.0) * 2 * π^2) * log(1/ttol)
-            # t_f = 1.0
+            t_f = 1/(2π^2)
+            nf = round(t_f/Δt)
+            Δt = t_f/nf
 
             gdata   = construct_grid(B,Dom,[-2.0,2.0],ymode=:stop)
             Pfn = generate_parallel_penalty(gdata,Dom,order,κ=κ_para) # Generate a parallel penalty with a modified penalty parameter
 
-            println(nx," ",t_f," ",Δt)
+            soln = solve(P,Dom,Δt,2.1Δt,:cgie,adaptive=false,   source=F,penalty_func=Pfn,nf=nf)
+            soln = solve(P,Dom,Δt,t_f,:cgie,adaptive=false,     source=F,penalty_func=Pfn,nf=nf)
+            println(nx,"    t_f=",t_f,"    t_f-t=",t_f-soln.t[2],"     Δt=",Δt,"   nf=",nf)
 
-            soln = solve(P,Dom,Δt,2.1Δt,:cgie,adaptive=false,source=F,penalty_func=Pfn)
-            soln = solve(P,Dom,Δt,t_f,:cgie,adaptive=false,source=F,penalty_func=Pfn)
 
             T_exact = zeros(Dom.nx,Dom.ny);
             for j = 1:ny
                 for i = 1:nx
-                    T_exact[i,j] = T(Dom.gridx[i],Dom.gridy[j],t_f)
+                    T_exact[i,j] = T(Dom.gridx[i],Dom.gridy[j],soln.t[end])
                 end
             end
             
 
             push!(pollution, abs(1/k(0.0,0.0) - soln.u[2][floor(Int,nx/2)+1,floor(Int,ny/2)+1]))
-
+            push!(pollution_time,abs(T(0.0,0.0,t_f) - soln.u[2][floor(Int,nx/2)+1,floor(Int,ny/2)+1]))
             push!(rel_error, norm(T_exact .- soln.u[2])/norm(T_exact))
-
             println("poll=",pollution[end]," relerr=",rel_error[end])
 
         end
 
         open(string("para/NB_kpara_",κ_para,"_pollution_O",order,".csv"),"w") do io
-            writedlm(io,[N pollution])
+            writedlm(io,[N pollution pollution_time])
         end
 
         open(string("para/NB_kpara_",κ_para,"_relerr_O",order,".csv"),"w") do io
