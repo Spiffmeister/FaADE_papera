@@ -1,9 +1,9 @@
 using LinearAlgebra
 
-cd("..")
+# cd("..")
 using Interpolations
-push!(LOAD_PATH,"./plas_diff")
-push!(LOAD_PATH,"./SBP_operators")
+push!(LOAD_PATH,"../plas_diff")
+push!(LOAD_PATH,"../SBP_operators")
 using SBP_operators
 using plas_diff
 
@@ -53,11 +53,11 @@ using CairoMakie
 
 
 
-p3 = Figure(resolution=(1600,1200),fontsize=20)
+p3 = Figure(resolution=(1600,1200),fontsize=40)
 # p3 = Figure()
 ax3 = Axis3(p3[1,1],xlabel="",ylabel="y",zlabel="x",
-    ylabelsize=30,
-    zlabelsize=30)
+    ylabelsize=50,
+    zlabelsize=50)
 
 ψ = repeat(gdata.x,1,gdata.ny);
 θ = repeat(gdata.y',gdata.nx,1);
@@ -113,11 +113,11 @@ ax3_backwardpt = scatter!(ax3,[pts[end]],markercolor=ax3_backwardln.color)
 ax3.yticks = (-π:π/2:π,["π", "-π/2", "0", "π/2", "π"])
 ax3.xticks = ([0],["0"])
 
-ax3_al = axislegend(ax3,[[ax3_forwardpt,ax3_forwardln],[ax3_backwardpt,ax3_backwardln]],["Foward","Backward"],"Field line tracing direction",position=:rt,labelsize=30)
+ax3_al = axislegend(ax3,[[ax3_forwardpt,ax3_forwardln],[ax3_backwardpt,ax3_backwardln]],["Foward","Backward"],"Field line tracing direction",position=:rt,labelsize=40)
 
 
 
-save("FieldLineTracing.pdf", p3)#, resolution=(1600,1200), transparency=true)
+save("ParallelFieldGrid.pdf", p3)#, resolution=(1600,1200), transparency=true)
 
 
 
