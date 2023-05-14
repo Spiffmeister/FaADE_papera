@@ -31,10 +31,10 @@ using CairoMakie
 # using GLMakie
 
 
-F = Figure(resolution=(1600,1200),fontsize=20)
+F = Figure(resolution=(1600,1200),fontsize=40)
 # F = Figure()
 
-Ax = Axis(F[1,1],xlabel=L"\theta",ylabel=L"\psi")
+Ax = Axis(F[1,1],xlabel=L"\theta",ylabel=L"\psi",xlabelsize=50,ylabelsize=50)
 
 P = scatter!(Ax,pdata.θ[:],pdata.ψ[:],markersize=3.0,color=:black)
 P1 = scatter!(Ax,ptrace1[1],ptrace1[2],markersize=25.0)

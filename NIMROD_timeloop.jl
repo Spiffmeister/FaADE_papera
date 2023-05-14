@@ -33,31 +33,31 @@ function B(X,x,p,t)
 end
 # Exact solution
 
+M = [0.1,0.075,0.05,0.025,0.01]
 
-N = [17,25,33,41,49,57]
-
-for k_perp = [1.0,1e-3,1e-6,1e-9]
-    κ = k_perp
-    k(x,y) = κ
+for k_perp = [1.0]#1e-3,1e-6,1e-9]
+    k(x,y) = k_perp
     ttol = 1e-6
     T(x,y,t) = (1.0 - exp(-2.0*k_perp*π^2*t) )/( k_perp )*Ψ(x,y)
     # Diffusion coefficient
     for order in [2,4]
-        # pollution = []
-        # pollution_time = []
-        # Tmid = []
-        # umid = []
+        pollution = []
+        pollution_time = []
         rel_error = []
         abs_error = []
+        Tmid = []
+        umid = []
         
-        P = VariableCoefficientPDE2D(u₀,k,k,order,BoundaryLeft,BoundaryRight,BoundaryUp,BoundaryDown)
         println("===",k_perp,"===",order,"===")
-        for n in N
-            nx = ny = n
+        for m in [0.1,0.075,0.05,0.025,0.01]
+            nx = ny = 17
             Dom = Grid2D(𝒟x,𝒟y,nx,ny)
             
+            # Build PDE problem
+            P = VariableCoefficientPDE2D(u₀,k,k,order,BoundaryLeft,BoundaryRight,BoundaryUp,BoundaryDown)
+
             # Time domain
-            Δt = 0.1Dom.Δx^2
+            Δt = m*Dom.Δx^2 
             t_f = 1/(2π^2)
             nf = round(t_f/Δt)
             Δt = t_f/nf
@@ -65,9 +65,8 @@ for k_perp = [1.0,1e-3,1e-6,1e-9]
             gdata   = construct_grid(B,Dom,[-2.0π,2.0π],ymode=:stop)
             Pfn = generate_parallel_penalty(gdata,Dom,order) # Generate a parallel penalty with a modified penalty parameter
 
-
-            soln = solve(P,Dom,Δt,2.1Δt,:cgie,adaptive=false,source=F,penalty_func=Pfn,nf=nf)
-            soln = solve(P,Dom,Δt,t_f,:cgie,adaptive=false,source=F,penalty_func=Pfn,nf=nf)
+            soln = solve(P,Dom,Δt,2.1Δt,:cgie,adaptive=false,source=F,nf=nf, penalty_func=Pfn)
+            soln = solve(P,Dom,Δt,t_f,:cgie,adaptive=false,source=F,nf=nf,  penalty_func=Pfn)
             println(nx,"    t_f=",t_f,"    t_f-t=",t_f-soln.t[2],"     Δt=",Δt,"   nf=",nf)
 
             T_exact = zeros(Dom.nx,Dom.ny)
@@ -78,25 +77,25 @@ for k_perp = [1.0,1e-3,1e-6,1e-9]
             end
             
 
-            # push!(pollution, abs(1/k(0.0,0.0) - soln.u[2][floor(Int,nx/2)+1,floor(Int,ny/2)+1]))
-            # push!(pollution_time, abs(T(0.0,0.0,t_f) - soln.u[2][floor(Int,nx/2)+1,floor(Int,ny/2)+1])/T(0.0,0.0,t_f))
+            push!(pollution, abs(1/k(0.0,0.0) - soln.u[2][floor(Int,nx/2)+1,floor(Int,ny/2)+1]))
+            push!(pollution_time, abs(T(0.0,0.0,t_f) - soln.u[2][floor(Int,nx/2)+1,floor(Int,ny/2)+1])/T(0.0,0.0,t_f))
             push!(rel_error, norm(T_exact .- soln.u[2])/norm(T_exact))
-            push!(abs_error, norm(T_exact .- soln.u[2]))
-            # push!(Tmid,T(0.0,0.0,t_f))
-            # push!(umid,soln.u[2][floor(Int,nx/2)+1,floor(Int,ny/2)+1])
+            push!(abs_error, norm(T_exact .- soln.u[2])*Dom.Δx)
+            push!(Tmid,T(0.0,0.0,t_f))
+            push!(umid,soln.u[2][floor(Int,nx/2)+1,floor(Int,ny/2)+1])
 
         end
         nameappend=string("k=",k(0,0))
 
-        # open(string("perp/NB_kperp_",k_perp,"_pollution_O",order,".csv"),"w") do io
-        #     writedlm(io,[N pollution pollution_time Tmid umid])
-        # end
+        open(string("timeloop/NB_kperp_cub_",k_perp,"_pollution_O",order,".csv"),"w") do io
+            writedlm(io,[M pollution pollution_time Tmid umid])
+        end
 
-        # open(string("perp/NB_kperp_",k_perp,"_relerr_O",order,".csv"),"w") do io
-        #     writedlm(io,[N rel_error abs_error])
-        # end
+        open(string("timeloop/NB_kperp_cub_",k_perp,"_relerr_O",order,".csv"),"w") do io
+            writedlm(io,[M rel_error abs_error])
+        end
 
-        # println("pollution=",pollution)
+        println("pollution=",pollution)
         println("rel error=",rel_error)
     end
 end

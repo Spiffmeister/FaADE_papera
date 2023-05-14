@@ -41,11 +41,9 @@ T(x,y,t) = 2π^2 * t * Ψ(x,y)
 
 N = [17,25,33,41,49,57]
 
-ttol = 1e-6
-
 for order in [2,4]
-    pollution = []
-    pollnear = []
+    # pollution = []
+    # pollnear = []
     rel_error = []
     for n in N
         
@@ -79,8 +77,8 @@ for order in [2,4]
         end
 
         # push!(pollution, 1/k(0.0,0.0) - soln.u[2][floor(Int,nx/2)+1,floor(Int,ny/2)+1])
-        push!(pollution, 1.0 - soln.u[2][floor(Int,nx/2)+1,floor(Int,ny/2)+1])
-        push!(pollnear,T_exact[floor(Int,nx/2),floor(Int,ny/2)] - soln.u[2][floor(Int,nx/2),floor(Int,ny/2)])
+        # push!(pollution, 1.0 - soln.u[2][floor(Int,nx/2)+1,floor(Int,ny/2)+1])
+        # push!(pollnear,T_exact[floor(Int,nx/2),floor(Int,ny/2)] - soln.u[2][floor(Int,nx/2),floor(Int,ny/2)])
         push!(rel_error, norm(T_exact .- soln.u[2])/norm(T_exact))
 
         # P = Figure(resolution=(1200,1200))
@@ -100,16 +98,16 @@ for order in [2,4]
     end
     # nameappend=string("k=",k(0,0))
 
-    open(string("limit/NB_limit_pollution_O",order,".csv"),"w") do io
-        writedlm(io,[N pollution pollnear])
-    end
+    # open(string("limit/NB_limit_pollution_O",order,".csv"),"w") do io
+    #     writedlm(io,[N pollution pollnear])
+    # end
 
     open(string("limit/NB_limit_relerr_O",order,".csv"),"w") do io
         writedlm(io,[N rel_error])
     end
 
-    println("pollution=",pollution)
-    println("poll near",pollnear)
+    # println("pollution=",pollution)
+    # println("poll near",pollnear)
     println("rel error=",rel_error)
 end
 
