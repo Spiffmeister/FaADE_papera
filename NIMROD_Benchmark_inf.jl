@@ -43,7 +43,6 @@ N = [17,25,33,41,49,57]
 
 for order in [2,4]
     # pollution = []
-    # pollnear = []
     rel_error = []
     for n in N
         
@@ -77,26 +76,9 @@ for order in [2,4]
         end
 
         # push!(pollution, 1/k(0.0,0.0) - soln.u[2][floor(Int,nx/2)+1,floor(Int,ny/2)+1])
-        # push!(pollution, 1.0 - soln.u[2][floor(Int,nx/2)+1,floor(Int,ny/2)+1])
-        # push!(pollnear,T_exact[floor(Int,nx/2),floor(Int,ny/2)] - soln.u[2][floor(Int,nx/2),floor(Int,ny/2)])
         push!(rel_error, norm(T_exact .- soln.u[2])/norm(T_exact))
 
-        # P = Figure(resolution=(1200,1200))
-        # Pa = Axis3(P[1,1])
-        # wireframe!(Pa,Dom.gridx,Dom.gridy,abs.(soln.u[2].-T_exact))
-        # name=string("kinf_O",order,"_n",n,".png")
-        # save(name,P)
-
-        # P2 = Figure(resolution=(1200,1200))
-        # Pa2 = Axis(P2[1,1])
-        # # Pa21 = lines!(Pa2,soln.u[2][floor(Int,nx/2)+1,:])
-        # Pa22 = lines!(Pa2,abs.(T_exact[floor(Int,nx/2)+1,:].-soln.u[2][floor(Int,nx/2)+1,:]))
-        # # axislegend(Pa2,[Pa21,Pa22],["numerical","exact"])
-        # name=string("aaa_lines/kinf_O",order,"_n",n,".png")
-        # save(name,P2)
-
     end
-    # nameappend=string("k=",k(0,0))
 
     # open(string("limit/NB_limit_pollution_O",order,".csv"),"w") do io
     #     writedlm(io,[N pollution pollnear])
@@ -107,58 +89,7 @@ for order in [2,4]
     end
 
     # println("pollution=",pollution)
-    # println("poll near",pollnear)
     println("rel error=",rel_error)
 end
 
 
-
-#=
-N = 1:10
-levellist = [T(Dom.gridx[i],Dom.gridy[i],t_f) for i in N]
-
-contour(Dom.gridx,Dom.gridy,T_exact,
-    levels=levellist)
-
-
-
-grid_contour = LinRange(-0.5,0.5,100);
-T_contour = zeros(100,100);
-for i = 1:100, j = 1:100
-    T_contour[i,j] = T(grid_contour[i],grid_contour[j],t_f);
-end
-
-contour(grid_contour,grid_contour,T_contour,
-    levels=[T(Dom.gridx[1],Dom.gridy[1],t_f)],legend=false)
-for i = 1:20
-    pt = rand(1:33,2)
-    contour!(grid_contour,grid_contour,T_contour,levels=[T(Dom.gridx[pt[1]],Dom.gridy[pt[2]],t_f)])
-    plot!([Dom.gridx[pt[1]],gdata.Fplane.x[pt[1],pt[2]]],[Dom.gridy[pt[2]],gdata.Fplane.y[pt[1],pt[2]]])
-end
-
-contour!(Dom.gridx,Dom.gridy,T_exact,levels=[T(Dom.gridx[18],Dom.gridy[18],t_f)])
-plot!([Dom.gridx[18],gdata.Fplane.x[18,18]],[Dom.gridy[18],gdata.Fplane.y[18,18]])
-
-
-
-
-# scatter!([Dom.gridx[5],gdata.Fplane.x[5,17]],[Dom.gridy[17],gdata.Fplane.y[5,17]])
-
-# Solve
-
-# GLMakie.surface(soln.u[2])
-
-# println(T(0.0,0.0,t_f) .- soln.u[2][argmin(abs.(Dom.gridx)),argmin(abs.(Dom.gridy))])
-
-# println(soln.u[2][argmin(abs.(Dom.gridx)),argmin(abs.(Dom.gridy))] .- k(0.0,0.0))
-
-# using Plots
-# surface(T_exact)
-# surface(soln.u[2])
-
-# ϵ = zeros(nruns)
-# for i = 1:nruns
-#     ϵ[i] = norm( 1/k(0,0) - solns[i].soln.u[2][ argmin(abs.(solns[i].Dom.gridx)), argmin(abs.(solns[i].Dom.gridy)) ] )
-# end
-
-=#

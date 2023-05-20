@@ -11,16 +11,23 @@ Dx = [0.0,1.0]
 Dy = [-π,π]
 k = 2.1e-3 + 5e-3 #Perturbation parameter
 params = plas_diff.SampleFields.H_params([k/2., k/3.], [2.0, 3.0], [1.0, 2.0])
-function χ_h!(χ,x::Array{Float64},p,t)
-    # Hamiltons equations for the field-line Hamiltonian
-    # H = ψ²/2 - ψ(ψ-1) ∑ₘₙ ϵₘₙ(cos(mθ - nζ)) 
-    χ[1] = x[2] #p_1            qdot        θ
-    χ[2] = -sum(p.ϵₘₙ .*(sin.(p.m*x[1] - p.n*t) .* p.m)) #q_1        pdot        ψ
+# function χ_h!(χ,x::Array{Float64},p,t)
+#     # Hamiltons equations for the field-line Hamiltonian
+#     # H = ψ²/2 - ψ(ψ-1) ∑ₘₙ ϵₘₙ(cos(mθ - nζ)) 
+#     χ[1] = x[2] #p_1            qdot        θ
+#     χ[2] = -sum(p.ϵₘₙ .*(sin.(p.m*x[1] - p.n*t) .* p.m)) #q_1        pdot        ψ
+# end
+
+
+function f_1!(ψ,θ,p,t)
+    ψ = θ
+end
+function f_2!(ψ,θ,p,t)
+    -sum(p.ϵₘₙ .* sin.(p.m*ψ - p.n*t) .* p.m)
 end
 
 
-
-pdata = plas_diff.poincare(χ_h!,params,N_trajs=500,N_orbs=200,x=Dx,y=Dy)
+pdata = plas_diff.symp_poincare(f_1!,f_2!,params,N_trajs=1000,N_orbs=400,x=Dx,y=Dy)
 
 ptrace1 = plas_diff.tracer(χ_h!,params,100,[1.0,0.3])
 ptrace2 = plas_diff.tracer(χ_h!,params,100,[0.5,0.6])

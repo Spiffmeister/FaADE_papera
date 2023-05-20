@@ -39,7 +39,7 @@ end
 
 N = [17,25,33,41,49,57]
 
-for k_perp = [1.0,1e-3,1e-6,1e-9]
+for k_perp = [1.0,1e-3,1e-6]
     k(x,y) = k_perp
     T(x,y,t) = (1.0 - exp(-2.0*k_perp*π^2*t) )/( k_perp )*Ψ(x,y)
     # Diffusion coefficient
@@ -90,6 +90,7 @@ for k_perp = [1.0,1e-3,1e-6,1e-9]
 
             push!(rel_error, norm(T_exact .- soln.u[2])/norm(T_exact))
             push!(abs_error, norm(T_exact .- soln.u[2]))
+            # push!(abs_error,norm(T_exact[2:end-1,2:end-1] .- soln.u[2][2:end-1,2:end-1])/norm(T_exact[2:end-1,2:end-1]))
 
             # p = surface(soln.u[2],dpi=600)
             # pltname = string("perp_identityNB_kperp_",k_perp,"_pollution_O",order,".png")
@@ -103,6 +104,7 @@ for k_perp = [1.0,1e-3,1e-6,1e-9]
         end
 
         println("rel error=",rel_error)
+        println("interior error=",abs_error)
     end
 end
 
