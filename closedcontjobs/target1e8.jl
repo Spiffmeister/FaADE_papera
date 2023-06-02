@@ -11,8 +11,8 @@ using plas_diff
 ###
 Dx = [0.0,1.0]
 Dy = [-π,π]
-nx = 201
-ny = 201
+nx = 51
+ny = 51
 Dom = Grid2D(Dx,Dy,nx,ny)
 
 
@@ -182,13 +182,13 @@ contour!(Ax,Dom.gridy,Dom.gridx,soln1.u[2]',levels=findcontours([x for x in 0.68
 
 
 
-contour!(Ax,Dom.gridy,Dom.gridx,soln1.u[2]',levels=[0.6190925395341936],linewidth=3.0,color=:red)
+contour!(Ax,Dom.gridy,Dom.gridx,soln1.u[2]',levels=[0.5812944722968906],linewidth=3.0,color=:red)
 
 contour!(Ax,Dom.gridy,Dom.gridx,soln1.u[2]',levels=[0.58112213133933],linewidth=3.0,color=:red)
 
 
 using JLD2
-@save "nx201ny201target1e-8.jld2" soln1 Dom
+jldsave()
 
 
 =#

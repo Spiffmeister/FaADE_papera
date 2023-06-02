@@ -1,3 +1,8 @@
+#=
+    Second magnetic field from Paul, Hudson, Helander. 2022 
+=#
+
+
 using LinearAlgebra
 
 push!(LOAD_PATH,"../SBP_operators")
@@ -25,9 +30,15 @@ t_f = Inf
 
 println("Parallel grid construction")
 #= MAGNETIC FIELD =#
-ϵ = 2.1e-3 + 5e-3 #Perturbation parameter
+ϵ = 8e-3 #Perturbation parameter
 # ϵ = 0.0 #Perturbation parameter
-params = (ϵₘₙ = [ϵ/2., ϵ/3.], m=[2.0, 3.0], n=[1.0, 2.0])
+
+params = (ϵₘₙ = [ϵ/2., ϵ/3.], 
+            m=[4.0, 4.0, 4.0], 
+            n=[1.0, 2.0, 3.0])
+
+
+
 function χ_h!(χ,x::Array{Float64},p,t)
     # Hamiltons equations for the field-line Hamiltonian
     # H = ψ²/2 - ∑ₘₙ ϵₘₙ(cos(mθ - nζ))
@@ -182,13 +193,13 @@ contour!(Ax,Dom.gridy,Dom.gridx,soln1.u[2]',levels=findcontours([x for x in 0.68
 
 
 
-contour!(Ax,Dom.gridy,Dom.gridx,soln1.u[2]',levels=[0.6190925395341936],linewidth=3.0,color=:red)
+contour!(Ax,Dom.gridy,Dom.gridx,soln1.u[2]',levels=[0.5812944722968906],linewidth=3.0,color=:red)
 
 contour!(Ax,Dom.gridy,Dom.gridx,soln1.u[2]',levels=[0.58112213133933],linewidth=3.0,color=:red)
 
 
 using JLD2
-@save "nx201ny201target1e-8.jld2" soln1 Dom
+jldsave("paul.jld2",(soln1,Dom))
 
 
 =#

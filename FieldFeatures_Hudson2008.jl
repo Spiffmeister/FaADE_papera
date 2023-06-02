@@ -1,3 +1,7 @@
+#=
+    Using field line Hamiltonian from Hudson & Breslau 2008
+=#
+
 using LinearAlgebra
 
 push!(LOAD_PATH,"../SBP_operators")
@@ -11,13 +15,13 @@ using plas_diff
 ###
 Dx = [0.0,1.0]
 Dy = [-π,π]
-nx = 201
-ny = 201
+nx = 101
+ny = 101
 Dom = Grid2D(Dx,Dy,nx,ny)
 
 
 order = 4
-target = 1e-8
+target = 1e-10
 
 Δt = 0.1Dom.Δx^2
 # t_f = 100.0
@@ -25,7 +29,7 @@ t_f = Inf
 
 println("Parallel grid construction")
 #= MAGNETIC FIELD =#
-ϵ = 2.1e-3 + 5e-3 #Perturbation parameter
+ϵ = 2.1e-3 #Perturbation parameter
 # ϵ = 0.0 #Perturbation parameter
 params = (ϵₘₙ = [ϵ/2., ϵ/3.], m=[2.0, 3.0], n=[1.0, 2.0])
 function χ_h!(χ,x::Array{Float64},p,t)
@@ -81,7 +85,7 @@ using Interpolations
 xvals = LinRange(0.0,1.0,101);
 
 function findcontours(xvals,soln,Dom)
-    itp = LinearInterpolation(Dom.gridx,soln.u[2][:,1])
+    itp = LinearInterpolation(Dom.gridx,soln.u[2][:,floor(Int,ny/2)+1])
     uvals = itp(xvals)
     return uvals
 end
@@ -89,25 +93,42 @@ end
 
 c1  = findcontours(xvals,soln1,Dom);
 
+c1  = findcontours(0.5,soln1,Dom);
 
 pmode = CairoMakie
 
+CairoMakie.activate!()
 
 
-F =     pmode.Figure(resolution=(1600,1200),fontsize=40)
+F =     CairoMakie.Figure(resolution=(1600,1200),fontsize=40)
 Ax =    Axis(F[1,1],xlabel=L"\theta",ylabel=L"\psi",xlabelsize=50,ylabelsize=50)
-P =     scatter!(Ax,pdata.θ[:],pdata.ψ[:],markersize=3.0,color=:black)
+P =     scatter!(Ax,pdata.θ[:],pdata.ψ[:],markersize=3.0,color=:darkgray)
 ylims!(0.0,1.0)
 xlims!(-π,π)
 Pcon =  contour!(Ax,Dom.gridy,Dom.gridx,soln1.u[2]',levels=0.05:0.05:0.95,linewidth=4.0)
-Colorbar(F[1,2],Pcon,label=L"u",labelsize=50)
+Pcolbar = Colorbar(F[1,2],Pcon,label=L"u",labelsize=50)
 
-Pcon2 =  contour!(Ax,Dom.gridy,Dom.gridx,soln1.u[2]',levels=findcontours([0.504,0.67314],soln1,Dom),linewidth=3.0,color=:red)
 
-axislegend(Ax,[Pcon2],["O point contour"])
 
-# name = string("./FieldFeatures_nasty.pdf")
-# pmode.save(name, F)#, resolution=(1600,1200), transparency=true)
+c1 = Contour.contour(Dom.gridx,Dom.gridy,soln1.u[2],findcontours(0.495,soln1,Dom))
+c1x = [x[1] for x in c1.lines[1].vertices]
+c1y = [x[2] for x in c1.lines[1].vertices]
+
+c2 = Contour.contour(Dom.gridx,Dom.gridy,soln1.u[2],findcontours(0.675,soln1,Dom))
+c2x = [x[1] for x in c2.lines[1].vertices]
+c2y = [x[2] for x in c2.lines[1].vertices]
+
+Pcon21 = lines!(c1y,c1x,color=:red)
+Pcon22 = lines!(c2y,c2x,color=:red)
+
+axislegend(Ax,[Pcon21],["O point contour"])
+
+# Pcolbar.ticks = [0.0,findcontours(0.495,soln1,Dom),0.5,findcontours(0.675,soln1,Dom),1.0]
+# Pcolbar.ticklabels
+
+
+name = string("./FieldFeatures_Hudson2008_marked.pdf")
+CairoMakie.save(name, F)#, resolution=(1600,1200), transparency=true)
 
 
 
@@ -141,19 +162,37 @@ GLMakie.lines(Dom.gridx,soln1.u[2][:,51])
 
 
 
-
 F =     GLMakie.Figure()
 Ax =    Axis(F[1,1],xlabel=L"\theta",ylabel=L"\psi",xlabelsize=50,ylabelsize=50,title=string("Δu=",target))
-P =     scatter!(Ax,pdata.θ[:],pdata.ψ[:],markersize=3.0,color=:black)
+P =     scatter!(Ax,pdata.θ[:],pdata.ψ[:],markersize=3.0,color=:gray)
 ylims!(0.0,1.0)
 xlims!(-π,π)
 Pcon =  contour!(Ax,Dom.gridy,Dom.gridx,soln1.u[2]',levels=0.05:0.05:0.95,linewidth=4.0)
 Colorbar(F[1,2],Pcon,label=L"u",labelsize=50)
 
 
-Pcon2 =  contour!(Ax,Dom.gridy,Dom.gridx,soln1.u[2]',levels=findcontours([0.504,0.67314],soln1,Dom),linewidth=3.0,color=:red)
 
-axislegend(Ax,[Pcon2],["O point contour"])
+c1 = Contour.contour(Dom.gridx,Dom.gridy,soln1.u[2],findcontours(0.495,soln1,Dom))
+c1x = [x[1] for x in c1.lines[1].vertices]
+c1y = [x[2] for x in c1.lines[1].vertices]
+
+c2 = Contour.contour(Dom.gridx,Dom.gridy,soln1.u[2],findcontours(0.675,soln1,Dom))
+c2x = [x[1] for x in c2.lines[1].vertices]
+c2y = [x[2] for x in c2.lines[1].vertices]
+
+Pcon21 = lines!(c1y,c1x,color=:red)
+Pcon22 = lines!(c2y,c2x,color=:red)
+
+axislegend(Ax,[Pcon21],["O point contour"])
+
+
+
+
+
+
+
+Pcon2 =  contour!(Ax,Dom.gridy,Dom.gridx,soln1.u[2]',levels=findcontours([0.495,0.675],soln1,Dom),linewidth=3.0,color=:red)
+
 
 name = string("./FieldFeatures.pdf")
 pmode.save(name, F)#, resolution=(1600,1200), transparency=true)
