@@ -75,27 +75,16 @@ for k_perp = [1.0]#1e-3,1e-6,1e-9]
                     T_exact[i,j] = T(Dom.gridx[i],Dom.gridy[j],soln.t[end])
                 end
             end
-            
 
-            push!(pollution, abs(1/k(0.0,0.0) - soln.u[2][floor(Int,nx/2)+1,floor(Int,ny/2)+1]))
-            push!(pollution_time, abs(T(0.0,0.0,t_f) - soln.u[2][floor(Int,nx/2)+1,floor(Int,ny/2)+1])/T(0.0,0.0,t_f))
             push!(rel_error, norm(T_exact .- soln.u[2])/norm(T_exact))
             push!(abs_error, norm(T_exact .- soln.u[2])*Dom.Δx)
-            push!(Tmid,T(0.0,0.0,t_f))
-            push!(umid,soln.u[2][floor(Int,nx/2)+1,floor(Int,ny/2)+1])
 
         end
-        nameappend=string("k=",k(0,0))
 
-        open(string("timeloop/NB_kperp_cub_",k_perp,"_pollution_O",order,".csv"),"w") do io
-            writedlm(io,[M pollution pollution_time Tmid umid])
-        end
-
-        open(string("timeloop/NB_kperp_cub_",k_perp,"_relerr_O",order,".csv"),"w") do io
+        open(string("timeloop/NB_kperp_quad_",k_perp,"_relerr_O",order,".csv"),"w") do io
             writedlm(io,[M rel_error abs_error])
         end
 
-        println("pollution=",pollution)
         println("rel error=",rel_error)
     end
 end

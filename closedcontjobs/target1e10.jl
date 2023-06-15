@@ -1,8 +1,8 @@
 using LinearAlgebra
 
-push!(LOAD_PATH,"../FaADE")
+push!(LOAD_PATH,"../SBP_operators")
 push!(LOAD_PATH,"../plas_diff")
-using FaADE
+using SBP_operators
 using plas_diff
 
 
@@ -11,13 +11,13 @@ using plas_diff
 ###
 Dx = [0.0,1.0]
 Dy = [-π,π]
-nx = 201
-ny = 201
+nx = 51
+ny = 51
 Dom = Grid2D(Dx,Dy,nx,ny)
 
 
 order = 4
-target = 1e-8
+target = 1e-10
 
 Δt = 0.1Dom.Δx^2
 # t_f = 100.0
@@ -35,14 +35,14 @@ function χ_h!(χ,x::Array{Float64},p,t)
     χ[1] = -sum(p.ϵₘₙ .*(sin.(p.m*x[2] - p.n*t) .* p.m)) #q_1        pdot        ψ
 end
 dH(X,x,p,t) = χ_h!(X,x,params,t)
-PGrid = FaADE.construct_grid(dH,Dom,[-2π,2π])
-Pfn = FaADE.generate_parallel_penalty(PGrid,Dom,order)
+@time PGrid = SBP_operators.construct_grid(dH,Dom,[-2π,2π])
+Pfn = SBP_operators.generate_parallel_penalty(PGrid,Dom,order)
 
 
 u0(x,y) = x
 
-BoundaryLeft = Boundary(Dirichlet,(y,t) -> 0.0,FaADE.Left,1)
-BoundaryRight = Boundary(Dirichlet,(y,t) -> 1.0,FaADE.Right,1)
+BoundaryLeft = Boundary(Dirichlet,(y,t) -> 0.0,SBP_operators.Left,1)
+BoundaryRight = Boundary(Dirichlet,(y,t) -> 1.0,SBP_operators.Right,1)
 BoundaryUpDown = PeriodicBoundary(2)
 
 
@@ -81,7 +81,7 @@ using Interpolations
 xvals = LinRange(0.0,1.0,101);
 
 function findcontours(xvals,soln,Dom)
-    itp = LinearInterpolation(Dom.gridx,soln.u[2][:,1])
+    itp = LinearInterpolation(Dom.gridx,soln.u[2][:,26])
     uvals = itp(xvals)
     return uvals
 end
@@ -162,11 +162,11 @@ pmode.save(name, F)#, resolution=(1600,1200), transparency=true)
 contour!(Ax,Dom.gridy,Dom.gridx,soln1.u[2]',levels=[0.6035],linewidth=3.0,color=:red)
 
 
-contour!(Ax,Dom.gridy,Dom.gridx,soln1.u[2]',levels=findcontours([x for x in 0.5:0.01:0.7],soln1,Dom),linewidth=3.0,color=:red)
-contour!(Ax,Dom.gridy,Dom.gridx,soln1.u[2]',levels=findcontours([x for x in 0.62:0.001:0.62],soln1,Dom),linewidth=3.0,color=:red)
+contour!(Ax,Dom.gridy,Dom.gridx,soln1.u[2]',levels=findcontours([x for x in 0.666:0.01:0.71],soln1,Dom),linewidth=3.0,color=:red)
+contour!(Ax,Dom.gridy,Dom.gridx,soln1.u[2]',levels=findcontours([x for x in 0.67:0.001:0.69],soln1,Dom),linewidth=3.0,color=:red)
 
 
-contour!(Ax,Dom.gridy,Dom.gridx,soln1.u[2]',levels=[findcontours(0.5,soln1,Dom)],linewidth=3.0,color=:red)
+contour!(Ax,Dom.gridy,Dom.gridx,soln1.u[2]',levels=[findcontours(0.49,soln1,Dom)],linewidth=3.0,color=:red)
 contour!(Ax,Dom.gridy,Dom.gridx,soln1.u[2]',levels=[findcontours(0.51,soln1,Dom)],linewidth=3.0,color=:red)
 contour!(Ax,Dom.gridy,Dom.gridx,soln1.u[2]',levels=[findcontours(0.62,soln1,Dom)],linewidth=3.0,color=:red)
 contour!(Ax,Dom.gridy,Dom.gridx,soln1.u[2]',levels=[findcontours(0.625,soln1,Dom)],linewidth=3.0,color=:red)
@@ -182,13 +182,17 @@ contour!(Ax,Dom.gridy,Dom.gridx,soln1.u[2]',levels=findcontours([x for x in 0.68
 
 
 
-contour!(Ax,Dom.gridy,Dom.gridx,soln1.u[2]',levels=[0.6190925395341936],linewidth=3.0,color=:red)
+contour!(Ax,Dom.gridy,Dom.gridx,soln1.u[2]',levels=[0.5812944722968906],linewidth=3.0,color=:red)
 
 contour!(Ax,Dom.gridy,Dom.gridx,soln1.u[2]',levels=[0.58112213133933],linewidth=3.0,color=:red)
 
 
+
+contour!(Ax,Dom.gridy,Dom.gridx,soln1.u[2]',levels=[findcontours(0.69,soln1,Dom)],linewidth=3.0,color=:red)
+
+
 using JLD2
-@save "nx201ny201target1e-8.jld2" soln1 Dom
+jldsave()
 
 
 =#
