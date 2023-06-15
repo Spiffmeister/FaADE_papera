@@ -9,8 +9,8 @@ using LinearAlgebra
 cd("..")
 using Interpolations
 push!(LOAD_PATH,"./plas_diff")
-push!(LOAD_PATH,"./SBP_operators")
-using SBP_operators
+push!(LOAD_PATH,"./FaADE")
+using FaADE
 using plas_diff
 
 

@@ -2,8 +2,8 @@
 using LinearAlgebra
 using DelimitedFiles
 
-push!(LOAD_PATH,"../SBP_operators")
-using SBP_operators
+push!(LOAD_PATH,"../FaADE")
+using FaADE
 
 
 using GLMakie
@@ -21,10 +21,10 @@ k(x,y) = 0.0
 𝒟y = [-0.5,0.5]
 
 # Homogeneous boundary conditions
-BoundaryLeft    = Boundary(Dirichlet,(y,t) -> cos(0.5π)*cos(π*y)    , SBP_operators.Left, 1)
-BoundaryRight   = Boundary(Dirichlet,(y,t) -> cos(-0.5π)*cos(π*y)   , SBP_operators.Right, 1)
-BoundaryUp      = Boundary(Dirichlet,(x,t) -> cos(π*x)*cos(0.5π)    , SBP_operators.Up, 2)
-BoundaryDown    = Boundary(Dirichlet,(x,t) -> cos(π*x)*cos(-0.5π)   , SBP_operators.Down, 2)
+BoundaryLeft    = Boundary(Dirichlet,(y,t) -> cos(0.5π)*cos(π*y)    , FaADE.Left, 1)
+BoundaryRight   = Boundary(Dirichlet,(y,t) -> cos(-0.5π)*cos(π*y)   , FaADE.Right, 1)
+BoundaryUp      = Boundary(Dirichlet,(x,t) -> cos(π*x)*cos(0.5π)    , FaADE.Up, 2)
+BoundaryDown    = Boundary(Dirichlet,(x,t) -> cos(π*x)*cos(-0.5π)   , FaADE.Down, 2)
 
 # Initial condition
 u₀(x,y) = 0.0

@@ -1,8 +1,8 @@
 using LinearAlgebra
 
-push!(LOAD_PATH,"../SBP_operators")
+push!(LOAD_PATH,"../FaADE")
 push!(LOAD_PATH,"../plas_diff")
-using SBP_operators
+using FaADE
 using plas_diff
 
 
@@ -33,14 +33,14 @@ function χ_h!(χ,x::Array{Float64},p,t)
     χ[1] = -sum(p.ϵₘₙ .*(sin.(p.m*x[2] - p.n*t) .* p.m)) #q_1        pdot        ψ
 end
 dH(X,x,p,t) = χ_h!(X,x,params,t)
-PGrid = SBP_operators.construct_grid(dH,Dom,[-2π,2π])
-Pfn = SBP_operators.generate_parallel_penalty(PGrid,Dom,order)
+PGrid = FaADE.construct_grid(dH,Dom,[-2π,2π])
+Pfn = FaADE.generate_parallel_penalty(PGrid,Dom,order)
 
 
 u0(x,y) = x
 
-BoundaryLeft = Boundary(Dirichlet,(y,t) -> 0.0,SBP_operators.Left,1)
-BoundaryRight = Boundary(Dirichlet,(y,t) -> 1.0,SBP_operators.Right,1)
+BoundaryLeft = Boundary(Dirichlet,(y,t) -> 0.0,FaADE.Left,1)
+BoundaryRight = Boundary(Dirichlet,(y,t) -> 1.0,FaADE.Right,1)
 BoundaryUpDown = PeriodicBoundary(2)
 
 
