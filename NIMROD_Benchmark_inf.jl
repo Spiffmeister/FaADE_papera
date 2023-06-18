@@ -2,7 +2,6 @@
 using LinearAlgebra
 using DelimitedFiles
 
-push!(LOAD_PATH,"../FaADE")
 using FaADE
 
 

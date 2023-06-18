@@ -2,10 +2,9 @@ using LinearAlgebra
 
 # cd("..")
 using Interpolations
-push!(LOAD_PATH,"../plas_diff")
-push!(LOAD_PATH,"../FaADE")
 using FaADE
-using plas_diff
+include("./FieldLines.jl")
+
 
 
 
@@ -20,16 +19,15 @@ Dom = Grid2D(𝒟x,𝒟y,nx,ny)
 
 
 # params = plas_diff.SampleFields.H_params([0.],[0.],[0.])
-χₘₙ = 2.1e-3 + 5.0e-3
-params = plas_diff.SampleFields.H_params([χₘₙ/2., χₘₙ/3.],[2.0, 3.0],[1.0, 2.0])
-
+ϵₘₙ = 2.1e-3 + 5.0e-3
+params = (ϵₘₙ = [ϵ/2., ϵ/3.], m=[2.0, 3.0], n=[1.0, 2.0])
 function χ_h!(χ,x::Array{Float64},p,t)
     # Hamiltons equations for the field-line Hamiltonian
     # H = ψ²/2 - ∑ₘₙ ϵₘₙ(cos(mθ - nζ))
-    χ[1] = x[2] #p_1            qdot        θ
-    χ[2] = -sum(p.ϵₘₙ .*(sin.(p.m*x[1] - p.n*t) .* p.m)) #q_1        pdot        ψ
+    χ[2] = x[1] #p_1            qdot        θ
+    χ[1] = -sum(p.ϵₘₙ .*(sin.(p.m*x[2] - p.n*t) .* p.m)) #q_1        pdot        ψ
 end
-
+dH(X,x,p,t) = χ_h!(X,x,params,t)
 
 
 ###
@@ -39,16 +37,16 @@ nx = 6
 ny = 6
 Dom = Grid2D(𝒟x,𝒟y,nx,ny)
 
-gdata = plas_diff.construct_grid(𝒟x,𝒟y,nx,ny,χ_h!,params)
+gdata = construct_grid(dH,Dom,[-2π,2π])
 
-pdata = plas_diff.poincare(χ_h!,params,x=[0.0,1.0],y=[-π,π])
-
-
+# pdata = poincare(χ_h!,x=[0.0,1.0],y=[-π,π])
 
 
 
-# using GLMakie
-using CairoMakie
+
+
+using GLMakie
+# using CairoMakie
 
 
 
@@ -59,8 +57,8 @@ ax3 = Axis3(p3[1,1],xlabel="",ylabel="y",zlabel="x",
     ylabelsize=50,
     zlabelsize=50)
 
-ψ = repeat(gdata.x,1,gdata.ny);
-θ = repeat(gdata.y',gdata.nx,1);
+ψ = repeat(Dom.gridx,1,Dom.ny);
+θ = repeat(Dom.gridy',Dom.nx,1);
 
 scatter!(ax3,zeros(size(ψ))[:],θ[:],ψ[:],color=:black,label="ζ=0 plane")
 wireframe!(ax3,zeros(size(ψ)),θ,ψ,color=:grey)
@@ -84,7 +82,7 @@ streamplot(F,0.0..1.0,-π..π,0.0..2π,arrowsize=1e-5,density=0.1,arrow_size=0.1
 =#
 
 t = collect(range(0.0,2π,length=100));
-zplane = gdata.z_planes[1]
+zplane = gdata.Fplane
 
 pts = f.(zplane.x[pickapoint],zplane.y[pickapoint],t)
 ax3_forwardln = lines!(ax3, pts)
@@ -93,7 +91,7 @@ ax3_forwardpt = scatter!(ax3,[pts[end]],markercolor=ax3_forwardln.color)
 
 # Backward
 
-zplane = gdata.z_planes[2]
+zplane = gdata.Bplane
 
 f(x,y,t) = Point3f(
     -π*sin.(t),
@@ -117,7 +115,7 @@ ax3_al = axislegend(ax3,[[ax3_forwardpt,ax3_forwardln],[ax3_backwardpt,ax3_backw
 
 
 
-save("ParallelFieldGrid.pdf", p3)#, resolution=(1600,1200), transparency=true)
+# save("ParallelFieldGrid.pdf", p3)#, resolution=(1600,1200), transparency=true)
 
 
 

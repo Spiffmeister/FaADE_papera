@@ -4,10 +4,10 @@
 
 using LinearAlgebra
 
-push!(LOAD_PATH,"../SBP_operators")
-push!(LOAD_PATH,"../plas_diff")
-using SBP_operators
-using plas_diff
+# push!(LOAD_PATH,"../FaADE.jl/")
+using FaADE
+# push!(LOAD_PATH,"../FaADEtools.jl/")
+include("./FieldLines.jl")
 
 
 
@@ -15,13 +15,13 @@ using plas_diff
 ###
 Dx = [0.0,1.0]
 Dy = [-π,π]
-nx = 101
-ny = 101
+nx = 21
+ny = 21
 Dom = Grid2D(Dx,Dy,nx,ny)
 
 
 order = 4
-target = 1e-10
+target = 1e-8
 
 Δt = 0.1Dom.Δx^2
 # t_f = 100.0
@@ -39,26 +39,27 @@ function χ_h!(χ,x::Array{Float64},p,t)
     χ[1] = -sum(p.ϵₘₙ .*(sin.(p.m*x[2] - p.n*t) .* p.m)) #q_1        pdot        ψ
 end
 dH(X,x,p,t) = χ_h!(X,x,params,t)
-@time PGrid = SBP_operators.construct_grid(dH,Dom,[-2π,2π])
-Pfn = SBP_operators.generate_parallel_penalty(PGrid,Dom,order)
+@time PGrid = construct_grid(dH,Dom,[-2π,2π])
+Pfn = generate_parallel_penalty(PGrid,Dom,order)
 
 
 u0(x,y) = x
 
-BoundaryLeft = Boundary(Dirichlet,(y,t) -> 0.0,SBP_operators.Left,1)
-BoundaryRight = Boundary(Dirichlet,(y,t) -> 1.0,SBP_operators.Right,1)
+BoundaryLeft = Boundary(Dirichlet,(y,t) -> 0.0,FaADE.Left,1)
+BoundaryRight = Boundary(Dirichlet,(y,t) -> 1.0,FaADE.Right,1)
 BoundaryUpDown = PeriodicBoundary(2)
 
 
 println("Poincare construction")
-params = plas_diff.SampleFields.H_params([ϵ/2., ϵ/3.], [2.0, 3.0], [1.0, 2.0])
-function χ_h!(χ,x::Array{Float64},p,t)
-    # Hamiltons equations for the field-line Hamiltonian
-    # H = ψ²/2 - ∑ₘₙ ϵₘₙ(cos(mθ - nζ))
-    χ[1] = x[2] #p_1            qdot        θ
-    χ[2] = -sum(p.ϵₘₙ .*(sin.(p.m*x[1] - p.n*t) .* p.m)) #q_1        pdot        ψ
-end
-@time pdata = plas_diff.poincare(χ_h!,params,N_trajs=750,N_orbs=200,x=Dx,y=Dy)
+# params = plas_diff.SampleFields.H_params([ϵ/2., ϵ/3.], [2.0, 3.0], [1.0, 2.0])
+# function χ_h!(χ,x::Array{Float64},p,t)
+#     # Hamiltons equations for the field-line Hamiltonian
+#     # H = ψ²/2 - ∑ₘₙ ϵₘₙ(cos(mθ - nζ))
+#     χ[1] = x[2] #p_1            qdot        θ
+#     χ[2] = -sum(p.ϵₘₙ .*(sin.(p.m*x[1] - p.n*t) .* p.m)) #q_1        pdot        ψ
+# end
+# @time pdata = plas_diff.poincare(χ_h!,params,N_trajs=750,N_orbs=200,x=Dx,y=Dy)
+@time pdata = FieldLines.construct_poincare(dH,Dx,Dy,N_trajs=750,N_orbs=200)
 
 
 println("Begin compile solve")
@@ -95,9 +96,7 @@ c1  = findcontours(xvals,soln1,Dom);
 
 c1  = findcontours(0.5,soln1,Dom);
 
-pmode = CairoMakie
-
-CairoMakie.activate!()
+GLMakie.activate!()
 
 
 F =     CairoMakie.Figure(resolution=(1600,1200),fontsize=40)
@@ -127,8 +126,8 @@ axislegend(Ax,[Pcon21],["O point contour"])
 # Pcolbar.ticklabels
 
 
-name = string("./FieldFeatures_Hudson2008_marked.pdf")
-CairoMakie.save(name, F)#, resolution=(1600,1200), transparency=true)
+# name = string("./FieldFeatures_Hudson2008_marked.pdf")
+# CairoMakie.save(name, F)
 
 
 
