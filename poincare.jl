@@ -1,6 +1,6 @@
-#=
-    Example for computing in a slab case
-=#
+"""
+Section 3.3 - Example Poincaré section
+"""
 # push!(LOAD_PATH,"../plas_diff/")
 # using plas_diff
 include("FieldLines.jl")

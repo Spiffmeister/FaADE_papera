@@ -1,6 +1,6 @@
-
-
-
+"""
+Section 4.2 - NIMROD solution, contours and streamlines
+"""
 # using GLMakie
 using CairoMakie
 
