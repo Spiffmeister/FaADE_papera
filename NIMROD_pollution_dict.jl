@@ -90,13 +90,13 @@ for order in [2,4]
             PData   = ParallelData(gdata,Dom,order,κ=k_para)#,B=MagField) # Generate a parallel penalty with a modified penalty parameter
             
             # Build PDE problem
-            P = newProblem2D(order,u₀,k,k,Dom,BC,F,PData)
+            P = Problem2D(order,u₀,k,k,Dom,BC,F,PData)
             
             soln = solve(P,Dom,Δt,1.1Δt,solver=:theta, θ=θ)
             soln = solve(P,Dom,Δt,t_f,  solver=:theta, θ=θ)
             
             # Solution without parallel operator
-            Pwo = newProblem2D(order,u₀,k,k,Dom,BC,F,nothing)
+            Pwo = Problem2D(order,u₀,k,k,Dom,BC,F,nothing)
             solnwo = solve(P,Dom,Δt,t_f,solver=:theta, θ=θ)
 
             T_exact = zeros(eltype(Dom),size(Dom));

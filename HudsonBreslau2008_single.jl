@@ -70,7 +70,7 @@ BC = FaADE.Inputs.SATBoundaries(BoundaryLeft,BoundaryRight,BoundaryUp,BoundaryDo
 
 
 # Build PDE problem
-P = newProblem2D(order,u₀,k_perp,k_perp,Dom,BC,nothing,PData)
+P = Problem2D(order,u₀,k_perp,k_perp,Dom,BC,nothing,PData)
 
 
 

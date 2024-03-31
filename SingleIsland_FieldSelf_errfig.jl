@@ -81,7 +81,7 @@ function sol(nx,ny,order,reference)
     PData   = ParallelData(gdata,Dom,order,κ=k_para)#,B=MagField)
 
     # Build PDE problem
-    P1       = newProblem2D(order,u₀,k_perp,k_perp,Dom,BC,S,PData)
+    P1       = Problem2D(order,u₀,k_perp,k_perp,Dom,BC,S,PData)
 
     @show Δt = 1.0e-4
     t_f = 1.0e-2

@@ -85,7 +85,7 @@ for dt in [0.1,0.05,0.02]
                 PData   = ParallelData(gdata,Dom,order,κ=k_para) # Generate a parallel penalty with a modified penalty parameter
                 
                 # Build PDE problem
-                P = newProblem2D(order,u₀,k,k,Dom,BC,F,PData)
+                P = Problem2D(order,u₀,k,k,Dom,BC,F,PData)
                 
                 soln = solve(P,Dom,Δt,1.1Δt,solver=:theta, θ=θ)
                 soln = solve(P,Dom,Δt,t_f,  solver=:theta, θ=θ)

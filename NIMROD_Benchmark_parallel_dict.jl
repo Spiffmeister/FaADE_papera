@@ -105,7 +105,7 @@ for order in [2,4]
             PData   = ParallelData(gdata,Dom,order,κ=k_para)#,B=MagField) # Generate a parallel penalty with a modified penalty parameter
             
             # Build PDE problem
-            P = newProblem2D(order,u₀,k,k,Dom,BC,F,PData)
+            P = Problem2D(order,u₀,k,k,Dom,BC,F,PData)
 
             # Time domain
             Δt = 0.1Dom.Δx^2
