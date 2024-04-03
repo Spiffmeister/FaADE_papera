@@ -25,8 +25,7 @@ module FieldLines
     """
     function construct_poincare(H::Function,x::Vector{T},y::Vector{T};N_trajs::Int=500,N_orbs::Int=100) where T
 
-        ζ = (0.0,2*N_orbs*π)
-        ζ₀ = π*collect(0:2:2*N_orbs)
+        ζ₀ = 2π*collect(0:N_orbs/2)
 
         x₀ = rand(2,N_trajs)
 
@@ -39,20 +38,24 @@ module FieldLines
         end
 
         # Construct the problem and solve the trajectories in parallel
+        ζ = (0.0,N_orbs*π)
         P = ODEProblem(H,x₀[:,1],ζ)
         EP = EnsembleProblem(P,prob_func=prob_fn)
-        sim = solve(EP,EnsembleDistributed(),trajectories=N_trajs,tstops=ζ₀)
+
+        simf = solve(EP,Vern9(),EnsembleDistributed(),trajectories=N_trajs,saveat=ζ₀,abstol=1e-16,reltol=1e-15)
+
+        ζ = (0.0,-N_orbs*π)
+        P = ODEProblem(H,x₀[:,1],ζ)
+        EP = EnsembleProblem(P,prob_func=prob_fn)
+        simb = solve(EP,Vern9(),EnsembleDistributed(),trajectories=N_trajs,saveat=-ζ₀,abstol=1e-16,reltol=1e-15)
 
         # Loop though outputs and store plane intersecetions
-        ind = zeros(Int64,length(ζ₀))
+        # @show vcat(simf.u[1].u, simb.u[1].u[2:end])
+
         N_orbs += 1
         data = zeros(2,N_trajs*N_orbs)
         for i = 1:N_trajs
-            t = sim.u[i].t
-            for j = 1:length(ζ₀)
-                ind[j] = argmin(abs.(t .- 2π*j))[1]
-            end
-            u = sim.u[i].u[ind]
+            u = vcat(simf.u[i].u, simb.u[i].u[2:end])
             data[:,(i-1)*N_orbs+1:i*N_orbs] = mod.(hcat(u...),2π)
         end
 
@@ -76,13 +79,20 @@ module FieldLines
         x₀[2,:] = (y[end] - y[1])*x₀[2,:] .+ y[1] #θ
 
         function prob_fn(prob,i,repeat)
-            remake(prob,u0=ArrayPartition(x₀[2,i],x₀[1,i]))
+            remake(prob,u0=ArrayPartition(x₀[1,i],x₀[2,i]))
         end
 
+        # condition(u, t, integrator) = u[1]
+        # affect!(integrator) = nothing
+        # cb = ContinuousCallback(condition, affect!, nothing,save_positions = (true, false))
+
         # Construct the problem and solve the trajectories in parallel
-        P = DynamicalODEProblem(f1,f2,x₀[1,1],x₀[1,2],ζ)
+        P = DynamicalODEProblem(f1,f2,x₀[1,1],x₀[2,1],ζ)
         EP = EnsembleProblem(P,prob_func=prob_fn)
+
         sim = solve(EP,KahanLi8(),EnsembleDistributed(),trajectories=N_trajs,tstops=ζ₀)
+        # sim = solve(EP,KahanLi8(),EnsembleDistributed(),trajectories=N_trajs,
+        #     save_everystep=false,save_start=true,save_end=true,callback=cb)
 
         # Loop though outputs and store plane intersecetions
         ind = zeros(Int64,length(ζ₀))
@@ -96,8 +106,8 @@ module FieldLines
                 u[1,j] = sim.u[i].u[j][1]
                 u[2,j] = sim.u[i].u[j][2]
             end
-            datay[(i-1)*N_orbs+1:i*N_orbs] = u[1,:]
-            datax[(i-1)*N_orbs+1:i*N_orbs] = u[2,:]
+            datax[(i-1)*N_orbs+1:i*N_orbs] = u[1,:]
+            datay[(i-1)*N_orbs+1:i*N_orbs] = u[2,:]
         end
 # println(datay[1:10])
         if y[1] == -π
@@ -109,18 +119,27 @@ module FieldLines
     end
 
     function tracer(H::Function,N_orbs::Int64,x₀::Array{Float64};dir=1.0)
+
+        
         ζ = (0.0,dir*2*N_orbs*pi)
-        ζ₀ = pi*collect(0:dir*2:2*N_orbs)
+        ζ₀ = π*collect(0:dir*2:dir*2*N_orbs)
+        
         P = ODEProblem(H,x₀,ζ)
-        sol = solve(P,tstops=ζ₀)
+        sol = solve(P,Vern9(),saveat=ζ₀,abstol=1e-15,reltol=1e-15)
 
-        u3_ind = zeros(Int,length(ζ₀))
-        for n = 1:length(ζ₀)
-            u3_ind[n] = argmin(abs.(sol.t .- 2*n*pi))[1]
-        end
+        # println(sol.u)
+        # println(sol.t)
 
-        θ = [rem2pi(x[1],RoundNearest) for x in sol.u[u3_ind]]
-        ψ = [x[2] for x in sol.u[u3_ind]]
+        # u3_ind = zeros(Int,length(ζ₀))
+        # for n = 1:length(ζ₀)
+        #     u3_ind[n] = argmin(abs.(sol.t .- 2*n*pi))[1]
+        # end
+
+        # θ = [rem2pi(x[1],RoundNearest) for x in sol.u[u3_ind]]
+        # ψ = [x[2] for x in sol.u[u3_ind]]
+
+        θ = rem2pi.(sol[2,:],RoundNearest)
+        ψ = sol[1,:]
 
         return θ,ψ
 
