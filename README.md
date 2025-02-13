@@ -1,4 +1,4 @@
-# Code for submission to JCP 2023
+# Code for submission to CPC 2024
 
 See the FaADE package here: [github](https://github.com/Spiffmeister/FaADE.jl)
 
